@@ -61,7 +61,7 @@ interface SortedListInterface extends Countable, IteratorAggregate, JsonSerializ
     public function clear(): void;
 
     /**
-     * @return array<int, int|string>
+     * @return array<int, T>
      */
     public function toArray(): array;
 
@@ -71,12 +71,52 @@ interface SortedListInterface extends Countable, IteratorAggregate, JsonSerializ
     public function getType(): ?string;
 
     /**
-     * @return Traversable<int, int|string>
+     * Find the index of the first occurrence of a value.
+     * @param int|string $value
+     * @return int|null null if not found
+     */
+    public function indexOf(int|string $value): ?int;
+
+    /**
+     * Get the value at a specific index.
+     * @param int $index
+     * @return T
+     * @throws \OutOfBoundsException if index is out of bounds
+     */
+    public function get(int $index): int|string;
+
+    /**
+     * Extract a slice of the list.
+     * @param int $start
+     * @param int|null $length
+     */
+    public function slice(int $start, ?int $length = null): self;
+
+    /**
+     * Merge with another sorted list.
+     * @param self $other
+     */
+    public function merge(self $other): self;
+
+    /**
+     * Filter elements using a callback.
+     * @param callable(int|string): bool $callback
+     */
+    public function filter(callable $callback): self;
+
+    /**
+     * Transform elements using a callback while maintaining sort order.
+     * @param callable(int|string): (int|string) $callback
+     */
+    public function map(callable $callback): self;
+
+    /**
+     * @return Traversable<int, T>
      */
     public function getIterator(): Traversable;
 
     /**
-     * @return array<int, int|string>
+     * @return array<int, T>
      */
     public function jsonSerialize(): array;
 }

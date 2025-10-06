@@ -15,10 +15,15 @@ use Traversable;
 
 /**
  * @template T of int|string
- * @implements SortedListInterface
+ * @implements SortedListInterface<T>
  */
 final class SortedLinkedList implements SortedListInterface
 {
+    public const ORDER_ASC = 'asc';
+    public const ORDER_DESC = 'desc';
+    public const TYPE_INT = 'int';
+    public const TYPE_STRING = 'string';
+    
     private const DUP_HEAD = 'head';
     private const DUP_TAIL = 'tail';
 
@@ -117,6 +122,73 @@ final class SortedLinkedList implements SortedListInterface
         return $self;
     }
 
+    /**
+     * Create from already sorted array (optimized).
+     * @param array<int, int|string> $sortedValues
+     */
+    public static function fromSortedArray(
+        array $sortedValues,
+        ?callable $comparator = null,
+        string $order = 'asc',
+        bool $allowDuplicates = true,
+        string $duplicatesPolicy = self::DUP_TAIL,
+        ?SortedStringOptions $stringOptions = null
+    ): self {
+        $self = new self($comparator, $order, $allowDuplicates, $duplicatesPolicy, $stringOptions);
+        
+        foreach ($sortedValues as $value) {
+            if ($self->type === null) {
+                $self->ensureTypeEstablished($value);
+            }
+            
+            if (!$self->allowDuplicates && $self->contains($value)) {
+                throw new DuplicateNotAllowedException('Duplicate value is not allowed');
+            }
+            
+            $node = new Node($value);
+            if ($self->head === null) {
+                $self->head = $self->tail = $node;
+            } else {
+                $self->tail->next = $node;
+                $self->tail = $node;
+            }
+            $self->size++;
+        }
+
+        return $self;
+    }
+
+    /**
+     * Create a numeric range.
+     * @param int $start
+     * @param int $end
+     * @param int $step
+     * @return SortedLinkedList
+     */
+    public static function fromRange(int $start, int $end, int $step = 1): self
+    {
+        if ($step === 0) {
+            throw new \InvalidArgumentException('Step cannot be zero');
+        }
+
+        $self = self::forInts();
+        
+        if ($step > 0) {
+            for ($i = $start; $i <= $end; $i += $step) {
+                $self->insert($i);
+            }
+        } else {
+            for ($i = $start; $i >= $end; $i += $step) {
+                $self->insert($i);
+            }
+        }
+
+        return $self;
+    }
+
+    /**
+     * @param int|string $value
+     */
     public function insert(int|string $value): void
     {
         $this->ensureTypeEstablished($value);
@@ -179,6 +251,9 @@ final class SortedLinkedList implements SortedListInterface
         $this->size++;
     }
 
+    /**
+     * @param iterable<int|string> $values
+     */
     public function addAll(iterable $values): void
     {
         foreach ($values as $v) {
@@ -186,6 +261,10 @@ final class SortedLinkedList implements SortedListInterface
         }
     }
 
+    /**
+     * @param int|string $value
+     * @return bool
+     */
     public function remove(int|string $value): bool
     {
         if ($this->head === null) {
@@ -227,6 +306,10 @@ final class SortedLinkedList implements SortedListInterface
         return false;
     }
 
+    /**
+     * @param int|string $value
+     * @return int
+     */
     public function removeAll(int|string $value): int
     {
         if (!$this->sameType($value)) {
@@ -268,6 +351,10 @@ final class SortedLinkedList implements SortedListInterface
         return $count;
     }
 
+    /**
+     * @param int|string $value
+     * @return bool
+     */
     public function contains(int|string $value): bool
     {
         if ($this->head === null) {
@@ -278,15 +365,27 @@ final class SortedLinkedList implements SortedListInterface
             return false;
         }
 
+        /** @var callable $cmp */
+        $cmp = $this->cmp;
+        
         for ($n = $this->head; $n !== null; $n = $n->next) {
-            if ($n->value === $value) {
+            $comparison = $cmp($value, $n->value);
+            
+            if ($comparison === 0) {
                 return true;
+            }
+            
+            if ($comparison < 0) {
+                return false;
             }
         }
 
         return false;
     }
 
+    /**
+     * @return int|string
+     */
     public function first(): int|string
     {
         if ($this->head === null) {
@@ -296,6 +395,9 @@ final class SortedLinkedList implements SortedListInterface
         return $this->head->value;
     }
 
+    /**
+     * @return int|string
+     */
     public function last(): int|string
     {
         if ($this->tail === null) {
@@ -305,11 +407,17 @@ final class SortedLinkedList implements SortedListInterface
         return $this->tail->value;
     }
 
+    /**
+     * @return bool
+     */
     public function isEmpty(): bool
     {
         return $this->size === 0;
     }
 
+    /**
+     * @return void
+     */
     public function clear(): void
     {
         $this->head = $this->tail = null;
@@ -317,7 +425,7 @@ final class SortedLinkedList implements SortedListInterface
     }
 
     /**
-     * @return array<int, int|string>
+     * @return array<int, T>
      */
     public function toArray(): array
     {
@@ -337,13 +445,16 @@ final class SortedLinkedList implements SortedListInterface
         return $this->type;
     }
 
+    /**
+     * @return int
+     */
     public function count(): int
     {
         return $this->size;
     }
 
     /**
-     * @return Traversable<int, int|string>
+     * @return Traversable<int, T>
      */
     public function getIterator(): Traversable
     {
@@ -351,11 +462,143 @@ final class SortedLinkedList implements SortedListInterface
     }
 
     /**
-     * @return array<int, int|string>
+     * @return array<int, T>
      */
     public function jsonSerialize(): array
     {
         return $this->toArray();
+    }
+
+    /**
+     * @param int|string $value
+     * @return int|null
+     */
+    public function indexOf(int|string $value): ?int
+    {
+        if ($this->head === null || !$this->sameType($value)) {
+            return null;
+        }
+
+        /** @var callable $cmp */
+        $cmp = $this->cmp;
+        $index = 0;
+        
+        for ($n = $this->head; $n !== null; $n = $n->next) {
+            if ($cmp($value, $n->value) === 0) {
+                return $index;
+            }
+            $index++;
+        }
+
+        return null;
+    }
+
+    /**
+     * @param int $index
+     * @return int|string
+     */
+    public function get(int $index): int|string
+    {
+        if ($index < 0 || $index >= $this->size) {
+            throw new \OutOfBoundsException("Index {$index} is out of bounds for list of size {$this->size}");
+        }
+
+        $current = $this->head;
+        for ($i = 0; $i < $index; $i++) {
+            $current = $current->next;
+        }
+
+        return $current->value;
+    }
+
+    /**
+    * @phpstan-return self<T>
+    */
+    public function slice(int $start, ?int $length = null): self
+    {
+        if ($start < 0) {
+            $start = max(0, $this->size + $start);
+        }
+
+        if ($start >= $this->size) {
+            return $this->createEmpty();
+        }
+
+        $length = $length ?? ($this->size - $start);
+        if ($length <= 0) {
+            return $this->createEmpty();
+        }
+
+        $result = $this->createEmpty();
+        $current = $this->head;
+
+        // Skip to start position
+        for ($i = 0; $i < $start && $current !== null; $i++) {
+            $current = $current->next;
+        }
+
+        // Collect slice elements
+        for ($i = 0; $i < $length && $current !== null; $i++) {
+            $result->insert($current->value);
+            $current = $current->next;
+        }
+
+        return $result;
+    }
+
+    /**
+    * @param self<T> $other
+    * @phpstan-return self<T>
+    */
+    public function merge(SortedListInterface $other): self
+    {
+        if ($this->type !== null && $other->getType() !== null && $this->type !== $other->getType()) {
+            throw new ValueTypeException('Cannot merge lists of different types');
+        }
+
+        $result = $this->createEmpty();
+        
+        foreach ($this as $value) {
+            $result->insert($value);
+        }
+        
+        foreach ($other as $value) {
+            $result->insert($value);
+        }
+
+        return $result;
+    }
+
+    /**
+    * @param callable(T): bool $callback
+    * @phpstan-return self<T>
+    */
+    public function filter(callable $callback): self
+    {
+        $result = $this->createEmpty();
+        
+        foreach ($this as $value) {
+            if ($callback($value)) {
+                $result->insert($value);
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param callable(T): T $callback
+     * @phpstan-return self<T>
+     */
+    public function map(callable $callback): self
+    {
+        $result = $this->createEmpty();
+        
+        foreach ($this as $value) {
+            $result->insert($callback($value));
+        }
+
+        return $result;
     }
 
     private function yieldValues(): Generator
@@ -395,5 +638,20 @@ final class SortedLinkedList implements SortedListInterface
         return $this->type === null
             || ($this->type === 'int' && is_int($value))
             || ($this->type === 'string' && is_string($value));
+    }
+
+    /**
+     * Create an empty list with the same configuration as this one.
+     * @phpstan-return self<T>
+     */
+    private function createEmpty(): static
+    {
+        return new self(
+            $this->cmp,
+            $this->order,
+            $this->allowDuplicates,
+            $this->duplicatesPolicy,
+            $this->stringOptions
+        );
     }
 }
