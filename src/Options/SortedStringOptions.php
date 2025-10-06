@@ -9,5 +9,6 @@ final class SortedStringOptions
     public function __construct(
         public bool $caseInsensitive = false,
         public bool $naturalOrder = false,
-    ) {}
+    ) {
+    }
 }
