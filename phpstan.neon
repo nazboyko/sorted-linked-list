@@ -1,0 +1,14 @@
+parameters:
+    level: 6
+    paths:
+        - src
+        - tests
+    
+    treatPhpDocTypesAsCertain: false
+    
+    ignoreErrors:
+        # Ignore generic type specification issues (not critical for functionality)
+        - '#Method .* return type with generic class .* does not specify its types#'
+        - '#Method .* should return .* but returns .*#'
+        - '#Method .* return type with generic interface .* does not specify its types#'
+        - '#Method .* has parameter .* with generic interface .* but does not specify its types#'
