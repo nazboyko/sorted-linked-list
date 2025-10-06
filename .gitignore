@@ -1,0 +1,19 @@
+/vendor/
+.idea/
+.phpunit.result.cache
+/coverage/
+/.phpstan.cache
+/.psalm-cache
+
+# OS/editor junk
+.DS_Store
+Thumbs.db
+
+# Common tool caches
+/.php-cs-fixer.cache
+/.php_cs.cache
+
+# Temp/build
+/tmp/
+/build/
+*.log
