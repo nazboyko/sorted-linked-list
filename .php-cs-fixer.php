@@ -8,6 +8,7 @@ $finder = PhpCsFixer\Finder::create()
     ->name('*.php');
 
 return (new PhpCsFixer\Config())
+    ->setRiskyAllowed(true)
     ->setRules([
         '@PSR12' => true,
         '@PHP82Migration' => true,
@@ -50,7 +51,6 @@ return (new PhpCsFixer\Config())
         'object_operator_without_whitespace' => true,
         'ordered_imports' => ['sort_algorithm' => 'alpha'],
         'phpdoc_indent' => true,
-        'phpdoc_inline_tag_to_description' => true,
         'phpdoc_no_access' => true,
         'phpdoc_no_package' => true,
         'phpdoc_no_useless_inheritdoc' => true,
@@ -64,7 +64,6 @@ return (new PhpCsFixer\Config())
         'return_type_declaration' => true,
         'semicolon_after_instruction' => true,
         'short_scalar_cast' => true,
-        'single_blank_line_before_namespace' => true,
         'single_class_element_per_statement' => true,
         'single_line_comment_style' => true,
         'single_quote' => true,

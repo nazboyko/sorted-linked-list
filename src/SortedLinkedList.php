@@ -23,12 +23,14 @@ final class SortedLinkedList implements SortedListInterface
     public const ORDER_DESC = 'desc';
     public const TYPE_INT = 'int';
     public const TYPE_STRING = 'string';
-    
+
     private const DUP_HEAD = 'head';
     private const DUP_TAIL = 'tail';
 
     private ?Node $head = null;
+
     private ?Node $tail = null;
+
     private int $size = 0;
 
     /** @var 'int'|'string'|null */
@@ -135,17 +137,18 @@ final class SortedLinkedList implements SortedListInterface
         ?SortedStringOptions $stringOptions = null
     ): self {
         $self = new self($comparator, $order, $allowDuplicates, $duplicatesPolicy, $stringOptions);
-        
+
         foreach ($sortedValues as $value) {
             if ($self->type === null) {
                 $self->ensureTypeEstablished($value);
             }
-            
+
             if (!$self->allowDuplicates && $self->contains($value)) {
                 throw new DuplicateNotAllowedException('Duplicate value is not allowed');
             }
-            
+
             $node = new Node($value);
+
             if ($self->head === null) {
                 $self->head = $self->tail = $node;
             } else {
@@ -172,7 +175,7 @@ final class SortedLinkedList implements SortedListInterface
         }
 
         $self = self::forInts();
-        
+
         if ($step > 0) {
             for ($i = $start; $i <= $end; $i += $step) {
                 $self->insert($i);
@@ -213,10 +216,12 @@ final class SortedLinkedList implements SortedListInterface
         // - DUP_HEAD: prepend if value <= head
         // - DUP_TAIL: prepend only if value < head
         $prependThreshold = ($this->duplicatesPolicy === self::DUP_HEAD) ? 0 : -1;
+
         if ($cmp($value, $this->head->value) <= $prependThreshold) {
             $node->next = $this->head;
             $this->head = $node;
             $this->size++;
+
             return;
         }
 
@@ -224,10 +229,12 @@ final class SortedLinkedList implements SortedListInterface
         // - DUP_TAIL: append if value >= tail
         // - DUP_HEAD: append only if value > tail
         $appendThreshold = ($this->duplicatesPolicy === self::DUP_TAIL) ? 0 : 1;
+
         if ($cmp($value, $this->tail->value) >= $appendThreshold) {
             $this->tail->next = $node;
             $this->tail = $node;
             $this->size++;
+
             return;
         }
 
@@ -270,6 +277,7 @@ final class SortedLinkedList implements SortedListInterface
         if ($this->head === null) {
             return false;
         }
+
         if (!$this->sameType($value)) {
             return false;
         }
@@ -338,6 +346,7 @@ final class SortedLinkedList implements SortedListInterface
                 $prev->next = $curr->next;
                 $this->size--;
                 $count++;
+
                 if ($curr === $this->tail) {
                     $this->tail = $prev;
                 }
@@ -367,14 +376,14 @@ final class SortedLinkedList implements SortedListInterface
 
         /** @var callable $cmp */
         $cmp = $this->cmp;
-        
+
         for ($n = $this->head; $n !== null; $n = $n->next) {
             $comparison = $cmp($value, $n->value);
-            
+
             if ($comparison === 0) {
                 return true;
             }
-            
+
             if ($comparison < 0) {
                 return false;
             }
@@ -430,6 +439,7 @@ final class SortedLinkedList implements SortedListInterface
     public function toArray(): array
     {
         $out = [];
+
         for ($n = $this->head; $n !== null; $n = $n->next) {
             $out[] = $n->value;
         }
@@ -482,7 +492,7 @@ final class SortedLinkedList implements SortedListInterface
         /** @var callable $cmp */
         $cmp = $this->cmp;
         $index = 0;
-        
+
         for ($n = $this->head; $n !== null; $n = $n->next) {
             if ($cmp($value, $n->value) === 0) {
                 return $index;
@@ -504,6 +514,7 @@ final class SortedLinkedList implements SortedListInterface
         }
 
         $current = $this->head;
+
         for ($i = 0; $i < $index; $i++) {
             $current = $current->next;
         }
@@ -512,8 +523,8 @@ final class SortedLinkedList implements SortedListInterface
     }
 
     /**
-    * @phpstan-return self<T>
-    */
+     * @phpstan-return self<T>
+     */
     public function slice(int $start, ?int $length = null): self
     {
         if ($start < 0) {
@@ -524,7 +535,8 @@ final class SortedLinkedList implements SortedListInterface
             return $this->createEmpty();
         }
 
-        $length = $length ?? ($this->size - $start);
+        $length ??= ($this->size - $start);
+
         if ($length <= 0) {
             return $this->createEmpty();
         }
@@ -547,9 +559,9 @@ final class SortedLinkedList implements SortedListInterface
     }
 
     /**
-    * @param self<T> $other
-    * @phpstan-return self<T>
-    */
+     * @param self<T> $other
+     * @phpstan-return self<T>
+     */
     public function merge(SortedListInterface $other): self
     {
         if ($this->type !== null && $other->getType() !== null && $this->type !== $other->getType()) {
@@ -557,11 +569,11 @@ final class SortedLinkedList implements SortedListInterface
         }
 
         $result = $this->createEmpty();
-        
+
         foreach ($this as $value) {
             $result->insert($value);
         }
-        
+
         foreach ($other as $value) {
             $result->insert($value);
         }
@@ -570,13 +582,13 @@ final class SortedLinkedList implements SortedListInterface
     }
 
     /**
-    * @param callable(T): bool $callback
-    * @phpstan-return self<T>
-    */
+     * @param callable(T): bool $callback
+     * @phpstan-return self<T>
+     */
     public function filter(callable $callback): self
     {
         $result = $this->createEmpty();
-        
+
         foreach ($this as $value) {
             if ($callback($value)) {
                 $result->insert($value);
@@ -593,7 +605,7 @@ final class SortedLinkedList implements SortedListInterface
     public function map(callable $callback): self
     {
         $result = $this->createEmpty();
-        
+
         foreach ($this as $value) {
             $result->insert($callback($value));
         }
@@ -611,6 +623,7 @@ final class SortedLinkedList implements SortedListInterface
     private function ensureTypeEstablished(int|string $value): void
     {
         $valueType = gettype($value);
+
         if ($valueType !== 'integer' && $valueType !== 'string') {
             throw new ValueTypeException('Only int or string values are supported');
         }

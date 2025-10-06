@@ -16,7 +16,7 @@ final class TypeSafetyTest extends TestCase
         $list = new SortedLinkedList();
         $list->insert(1);
         $this->expectException(ValueTypeException::class);
-        $list->insert("a");
+        $list->insert('a');
     }
 
     public function testNoDuplicates(): void
@@ -33,11 +33,11 @@ final class TypeSafetyTest extends TestCase
         $list->addAll([1, 2, 3]);
 
         // string "2" should not match int 2 in a typed list
-        self::assertFalse($list->contains("2"));
+        self::assertFalse($list->contains('2'));
         self::assertTrue($list->contains(2));
 
         // remove also respects type
-        self::assertFalse($list->remove("2"));
+        self::assertFalse($list->remove('2'));
         self::assertTrue($list->remove(2));
     }
 }

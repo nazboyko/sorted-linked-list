@@ -42,8 +42,8 @@ final class ComparatorFactory
     {
         if ($type === 'int') {
             return static function (int|string $a, int|string $b): int {
-                /** @var int $a */
-                /** @var int $b */
+                // @var int $a
+                // @var int $b
                 return $a <=> $b;
             };
         }
@@ -52,15 +52,16 @@ final class ComparatorFactory
 
         if ($opts->naturalOrder) {
             if ($opts->caseInsensitive) {
-                return static fn(int|string $a, int|string $b): int => strnatcasecmp((string)$a, (string)$b);
+                return static fn (int|string $a, int|string $b): int => strnatcasecmp((string) $a, (string) $b);
             }
-            return static fn(int|string $a, int|string $b): int => strnatcmp((string)$a, (string)$b);
+
+            return static fn (int|string $a, int|string $b): int => strnatcmp((string) $a, (string) $b);
         }
 
         if ($opts->caseInsensitive) {
-            return static fn(int|string $a, int|string $b): int => strcasecmp((string)$a, (string)$b);
+            return static fn (int|string $a, int|string $b): int => strcasecmp((string) $a, (string) $b);
         }
 
-        return static fn(int|string $a, int|string $b): int => strcmp((string)$a, (string)$b);
+        return static fn (int|string $a, int|string $b): int => strcmp((string) $a, (string) $b);
     }
 }
