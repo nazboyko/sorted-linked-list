@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<psalm
+    errorLevel="6"
+    resolveFromConfigFile="true"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="https://getpsalm.org/schema/config"
+    xsi:schemaLocation="https://getpsalm.org/schema/config vendor/vimeo/psalm/config.xsd"
+    findUnusedBaselineEntry="false"
+    findUnusedCode="false"
+>
+    <projectFiles>
+        <directory name="src" />
+        <directory name="tests" />
+        <ignoreFiles>
+            <directory name="vendor" />
+        </ignoreFiles>
+    </projectFiles>
+
+    <issueHandlers>
+        <ArgumentTypeCoercion errorLevel="suppress" />
+        <PossiblyNullPropertyAssignment errorLevel="suppress" />
+        <PossiblyNullPropertyFetch errorLevel="suppress" />
+        <InvalidReturnType errorLevel="suppress" />
+        <InvalidReturnStatement errorLevel="suppress" />
+        <InvalidNullableReturnType errorLevel="suppress" />
+        <NullableReturnStatement errorLevel="suppress" />
+        <MismatchingDocblockReturnType errorLevel="suppress" />
+        <MoreSpecificImplementedParamType errorLevel="suppress" />
+        <ImplementedParamTypeMismatch errorLevel="suppress" />
+        <PossiblyInvalidOperand errorLevel="suppress" />
+        <InvalidScalarArgument errorLevel="suppress" />
+    </issueHandlers>
+</psalm>
